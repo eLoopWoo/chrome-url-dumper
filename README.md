@@ -24,24 +24,31 @@ Say what the step will be
 pip install requirements.txt
 ```
 
-And check
+Check packages
+
 
 Windows
 ```
+
 pip list | Findstr /L "package"
-```
-Linux
-```
-pip list | grep "package
+
 ```
 
+Linux
+```
+
+pip list | grep "package
+
+```
 
 ## Running the tests
 
 -o oprating system
 -k kill chrome proccess ( deeper analysis )
 -d deeper analysis
+
 ```
+
 ./chrome_urls.py -o {string} -k {1/0} -d {1/0}
 
 ```
