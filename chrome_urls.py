@@ -6,7 +6,7 @@ from re import findall
 from psutil import process_iter
 from difflib import SequenceMatcher
 
-PROCESS_NAME = 'chrome.exe'
+PROCESS_NAME = ['chrome.exe', 'chrome']
 PATH_WINDOWS_VISTA_AND_LATER = 'C:\\Users\\' + os.getenv(
     'username') + '\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\'
 PATH_WINDOWS_XP = 'C:\\Documents and Settings\\' + os.getenv(
@@ -37,8 +37,9 @@ def fuzzy_search(name1, name2, strictness):
 
 def kill_process():
     for p in process_iter():
-        if fuzzy_search(p.name(), PROCESS_NAME, 0.9):
-            p.kill()
+        for name in PROCESS_NAME:
+            if fuzzy_search(p.name(), name, 0.9):
+                p.kill()
 
 
 def get_os_path(os):
