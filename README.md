@@ -28,7 +28,7 @@ pip list | Findstr /L "package"
 
 Linux
 ```
-pip list | grep "package
+pip list | grep "package"
 ```
 
 ## Running the tests
