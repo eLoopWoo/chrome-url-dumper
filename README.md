@@ -8,17 +8,11 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
-
 ```
 Python 2.7
 ```
 
 ### Installing
-
-A step by step series of examples that tell you have to get a development env running
-
-Say what the step will be
 
 ```
 pip install requirements.txt
@@ -29,16 +23,12 @@ Check packages
 
 Windows
 ```
-
 pip list | Findstr /L "package"
-
 ```
 
 Linux
 ```
-
 pip list | grep "package
-
 ```
 
 ## Running the tests
@@ -46,11 +36,8 @@ pip list | grep "package
 -o oprating system
 -k kill chrome proccess ( deeper analysis )
 -d deeper analysis
-
 ```
-
 ./chrome_urls.py -o {string} -k {1/0} -d {1/0}
-
 ```
 
 ## Authors
