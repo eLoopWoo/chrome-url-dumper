@@ -4,7 +4,7 @@ Accessing db's stored on machine by chrome browser and dumping urls found
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See Running the tests for notes on how to deploy the project on a live system.
 
 ### Prerequisites
 
