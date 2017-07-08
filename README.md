@@ -37,7 +37,7 @@ pip list | grep "package"
 -k kill chrome proccess ( deeper analysis )
 -d deeper analysis
 ```
-./chrome_urls.py -o {string} -k {1/0} -d {1/0}
+./main.py -o {string} -k {1/0} -d {1/0}
 ```
 
 ## Authors
