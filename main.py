@@ -99,15 +99,15 @@ def dump_data(os, kill_chrome, deep):
 
 
 def main(os, kill_chrome, deep):
-    dump_data(os=os, kill_chrome=kill_chrome, deep=deep)
+    dump_data(os=os, kill_chrome=int(kill_chrome), deep=int(deep))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Dump urls from GoogleChrome Browser databases')
     parser.add_argument('-o', '--os', type=str, help='operating system', required=True, dest='os')
-    parser.add_argument('-k', '--kill', type=bool, help='kill chrome process', required=False, default=False,
+    parser.add_argument('-k', '--kill', type=str, help='kill chrome process', required=False, default='0',
                         dest='kill_chrome')
-    parser.add_argument('-d', '--deep', type=bool, help='deep dump', required=False, default=False, dest='deep')
+    parser.add_argument('-d', '--deep', type=str, help='deep dump', required=False, default='0', dest='deep')
     args = parser.parse_args()
 
     main(**vars(args))
