@@ -1,4 +1,2 @@
-# chrome-urls
-
-# dumping all urls to file
+# Dumping urls in chrome databases
 # *notice* chrome proccess will be killed if running
