@@ -15,7 +15,7 @@ Python 2.7
 ### Installing
 
 ```
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 Check packages
