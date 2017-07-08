@@ -17,9 +17,7 @@ DATA_FILES = ['History', 'Favicons', 'Cookies', 'Top Sites',
 
 def fuzzy_search(name1, name2, strictness):
     similarity = SequenceMatcher(None, name1, name2)
-    if similarity.ratio() > strictness:
-        return True
-    return False
+    return similarity.ratio() > strictness
 
 
 def kill_chrome():
@@ -45,8 +43,7 @@ def dump_data():
                 urls = urls.union(new_urls)
             print 'File:{:35}Success'.format(f)
         except sqlite3.DatabaseError, e:
-            print 'File:{:35}Failed:{:35}'.format(f,e)
-            continue
+            print 'File:{:35}Failed:{:35}'.format(f, e)
     with open('chrome_urls.txt', 'w') as f:
         for url in urls:
             f.write("%s\n" % url)
