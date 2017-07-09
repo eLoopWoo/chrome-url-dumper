@@ -1,2 +1,3 @@
 pandas
 psutil
+pypiwin32
