@@ -5,6 +5,8 @@ from pandas import read_sql_query
 from re import findall
 from psutil import process_iter
 from difflib import SequenceMatcher
+import win32crypt
+import json
 
 PROCESS_NAME = ['chrome.exe', 'chrome']
 PATH_WINDOWS_VISTA_AND_LATER = 'C:\\Users\\' + os.getenv(
@@ -22,6 +24,48 @@ DATA_FILES = ['History', 'Favicons', 'Cookies', 'Top Sites',
               'Bookmarks', 'QuotaManager', 'Extension Cookies']
 
 ALL_FILES = set([])
+
+
+def dump_user_pass(path):
+    data = ([], [])
+    conn = sqlite3.connect(path + 'Login Data')
+    cursor = conn.cursor()
+    cursor.execute(
+        'SELECT username_value, action_url, times_used, signon_realm, origin_url, password_element, password_value, date_created FROM logins')
+    for result in cursor.fetchall():
+        password = win32crypt.CryptUnprotectData(result[6], None, None, None, 0)[1]
+        if password:
+            result = list(result)
+            result.pop(6)
+            result.insert(6, password)
+            data[0].append(result)
+        else:
+            result = list(result)
+            result.pop(6)
+            data[1].append(result)
+    return data
+
+
+def dump_users(path):
+    data = []
+    conn = sqlite3.connect(path + 'Login Data')
+    cursor = conn.cursor()
+    cursor.execute(
+        'SELECT username_value, update_time, origin_domain FROM stats')
+    for result in cursor.fetchall():
+        data.append(result)
+    return data
+
+
+def dump_downloads(path):
+    data = []
+    conn = sqlite3.connect(path + 'History')
+    cursor = conn.cursor()
+    cursor.execute(
+        'SELECT tab_url, http_method, opened, site_url, last_access_time, start_time, tab_referrer_url, last_modified, by_ext_name, original_mime_type, referrer, current_path, target_path, transient FROM downloads')
+    for result in cursor.fetchall():
+        data.append(result)
+    return data
 
 
 def generate_all_files(path):
@@ -86,6 +130,14 @@ def dump_data(os, kill_chrome, deep):
     if kill_chrome:
         kill_process()
     path = get_os_path(os=os.upper())
+
+    with open('chrome_downloads.json', 'w') as f:
+        f.write(json.dumps(dump_downloads(path=path)))
+    with open('chrome_user_pass.json', 'w') as f:
+        f.write(json.dumps(dump_user_pass(path=path)))
+    with open('chrome_users.json', 'w') as f:
+        f.write(json.dumps(dump_users(path=path)))
+
     if deep:
         generate_all_files(path=path)
         urls = generate_urls(path=path, files=ALL_FILES)
@@ -103,7 +155,7 @@ def main(os, kill_chrome, deep):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Dump urls from GoogleChrome Browser databases')
+    parser = argparse.ArgumentParser(description='Dump information from google-chrome browser databases')
     parser.add_argument('-o', '--os', type=str, help='operating system', required=True, dest='os')
     parser.add_argument('-k', '--kill', type=str, help='kill chrome process', required=False, default='0',
                         dest='kill_chrome')
