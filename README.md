@@ -33,11 +33,17 @@ pip list | grep "package"
 
 ## Running the tests
 
--o oprating system
 -k kill chrome proccess ( deeper analysis )
 -d deeper analysis
+
+Windows
 ```
-./main.py -o {string} -k {1/0} -d {1/0}
+python main.py -k {1/0} -d {1/0}
+```
+
+Linux
+```
+./main.py -k {1/0} -d {1/0}
 ```
 
 ## Authors
