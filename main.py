@@ -86,15 +86,22 @@ def kill_process():
                 p.kill()
 
 
-def get_os_path(os):
+def get_os_path():
+    import platform
+    print platform.system(), type(platform.system())
+    operating_system = platform.system().upper()
+    if 'WINDOWS' in operating_system:
+        operating_system += platform.release().upper()
     return {
         'WINDOWS10': PATH_WINDOWS_VISTA_AND_LATER,
+        'WINDOWS8.1': PATH_WINDOWS_VISTA_AND_LATER,
+        'WINDOWS8': PATH_WINDOWS_VISTA_AND_LATER,
         'WINDOWS7': PATH_WINDOWS_VISTA_AND_LATER,
         'WINDOWSVISTA': PATH_WINDOWS_VISTA_AND_LATER,
         'WINDOWSXP': PATH_WINDOWS_XP,
         'MAC': PATH_MAC_OS_X,
         'LINUX': PATH_LINUX
-    }.get(os, 'WINDOWS10')
+    }.get(operating_system, 'WINDOWS10')
 
 
 def generate_urls(path, files):
@@ -126,10 +133,10 @@ def generate_urls(path, files):
     return urls
 
 
-def dump_data(os, kill_chrome, deep):
+def dump_data(kill_chrome, deep):
     if kill_chrome:
         kill_process()
-    path = get_os_path(os=os.upper())
+    path = get_os_path()
 
     with open('chrome_downloads.json', 'w') as f:
         f.write(json.dumps(dump_downloads(path=path)))
@@ -150,13 +157,12 @@ def dump_data(os, kill_chrome, deep):
         print "*LOGGING*\tdump_data: {:5}%".format(100.0)
 
 
-def main(os, kill_chrome, deep):
-    dump_data(os=os, kill_chrome=int(kill_chrome), deep=int(deep))
+def main(kill_chrome, deep):
+    dump_data(kill_chrome=int(kill_chrome), deep=int(deep))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Dump information from google-chrome browser databases')
-    parser.add_argument('-o', '--os', type=str, help='operating system', required=True, dest='os')
     parser.add_argument('-k', '--kill', type=str, help='kill chrome process', required=False, default='0',
                         dest='kill_chrome')
     parser.add_argument('-d', '--deep', type=str, help='deep dump', required=False, default='0', dest='deep')
