@@ -26,6 +26,12 @@ DATA_FILES = ['History', 'Favicons', 'Cookies', 'Top Sites',
 ALL_FILES = set([])
 
 
+def generate_all_files(path):
+    global ALL_FILES
+    for root, dirs, files in os.walk(path):
+        ALL_FILES = ALL_FILES.union(files)
+
+
 def dump_user_pass(path):
     data = ([], [])
     conn = sqlite3.connect(path + 'Login Data')
@@ -66,12 +72,6 @@ def dump_downloads(path):
     for result in cursor.fetchall():
         data.append(result)
     return data
-
-
-def generate_all_files(path):
-    global ALL_FILES
-    for root, dirs, files in os.walk(path):
-        ALL_FILES = ALL_FILES.union(files)
 
 
 def fuzzy_search(name1, name2, strictness):
