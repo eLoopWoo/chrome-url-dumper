@@ -133,6 +133,7 @@ def generate_urls(path, files):
     return urls
 
 
+
 def dump_data(kill_chrome, deep):
     if kill_chrome:
         kill_process()
