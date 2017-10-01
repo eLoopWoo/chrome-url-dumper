@@ -16,11 +16,17 @@ def investigate_dbs(terminate_chrome, deep):
     chrome_dbs_path = get_os_path()
 
     with open('chrome_downloads.json', 'w') as f:
+        print "dump_downloads"
         f.write(json.dumps(dump_downloads(path=chrome_dbs_path)))
+        f.flush()
     with open('chrome_user_pass.json', 'w') as f:
+        print "dump_user_pass"
         f.write(json.dumps(dump_user_pass(path=chrome_dbs_path)))
+        f.flush()
     with open('chrome_users.json', 'w') as f:
+        print "dump_users"
         f.write(json.dumps(dump_users(path=chrome_dbs_path)))
+        f.flush()
 
     if deep:
         chrome_files = generate_all_files(path=chrome_dbs_path)
@@ -104,7 +110,7 @@ def kill_process():
 
 
 def get_os_path():
-    path_win_10_post2008 = os.path.join('C:\\', 'Users', os.getenv('username'), 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'System Profile')
+    path_win_10_post2008 = os.path.join('C:\\', 'Users', os.getenv('username'), 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default')
     path_win_7 = os.path.join('C:\\', 'Users', os.getenv('username'), 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default')
     path_win_xp = os.path.join('C:\\', 'Documents and Settings', os.getenv('username'), 'Application Support', 'Google', 'Chrome', 'Default')
     path_mac_os_x = '~/Library/Application Support/Google/Chrome/Default/'
