@@ -49,7 +49,7 @@ def generate_all_files(path):
 
 def dump_user_pass(path):
     data = ([], [])
-    conn = sqlite3.connect(path + 'Login Data')
+    conn = sqlite3.connect(os.path.join(path, 'Login Data'))
     cursor = conn.cursor()
     cursor.execute(
         'SELECT username_value, action_url, times_used, signon_realm, origin_url, password_element, password_value, date_created FROM logins')
@@ -69,7 +69,7 @@ def dump_user_pass(path):
 
 def dump_users(path):
     data = []
-    conn = sqlite3.connect(path + 'Login Data')
+    conn = sqlite3.connect(os.path.join(path, 'Login Data'))
     cursor = conn.cursor()
     cursor.execute(
         'SELECT username_value, update_time, origin_domain FROM stats')
@@ -80,7 +80,8 @@ def dump_users(path):
 
 def dump_downloads(path):
     data = []
-    conn = sqlite3.connect(path + 'History')
+    db_path = os.path.join(path, 'History')
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute(
         'SELECT tab_url, http_method, opened, site_url, last_access_time, start_time, tab_referrer_url, last_modified, by_ext_name, original_mime_type, referrer, current_path, target_path, transient FROM downloads')
@@ -135,7 +136,7 @@ def generate_urls(path, files):
             if not (counter % (len(files) / 10)):
                 print "*LOGGING*\tgenerate_urls: {}%".format((float(counter) / len(files)) * 100)
 
-            db = sqlite3.connect(path + f)
+            db = sqlite3.connect(os.path.join(path, f))
             cursor = db.cursor()
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
             tables = cursor.fetchall()
