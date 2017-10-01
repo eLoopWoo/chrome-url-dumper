@@ -7,29 +7,44 @@ from psutil import process_iter
 from difflib import SequenceMatcher
 import win32crypt
 import json
+import platform
 
-PROCESS_NAME = ['chrome.exe', 'chrome']
-PATH_WINDOWS_VISTA_AND_LATER = 'C:\\Users\\' + os.getenv(
-    'username') + '\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\'
-PATH_WINDOWS_XP = 'C:\\Documents and Settings\\' + os.getenv(
-    'username') + '\\Application Support\\Google\\Chrome\\Default\\'
-PATH_MAC_OS_X = '~/Library/Application Support/Google/Chrome/Default/'
-PATH_LINUX = '~/.config/google-chrome/Default/'
 
-DATA_FILES = ['History', 'Favicons', 'Cookies', 'Top Sites',
-              'Visited Links', 'Web Data', 'Shortcuts', 'Last Session',
-              'Last Tabs', 'Network Action Predictor', 'Current Tabs',
-              'Preferences', 'Current Session', 'TransportSecurity',
-              'TransportSecurity', 'Login Data', 'Origin Bound Certs',
-              'Bookmarks', 'QuotaManager', 'Extension Cookies']
+def investigate_dbs(terminate_chrome, deep):
+    if terminate_chrome:
+        kill_process()
+    chrome_dbs_path = get_os_path()
 
-ALL_FILES = set([])
+    with open('chrome_downloads.json', 'w') as f:
+        f.write(json.dumps(dump_downloads(path=chrome_dbs_path)))
+    with open('chrome_user_pass.json', 'w') as f:
+        f.write(json.dumps(dump_user_pass(path=chrome_dbs_path)))
+    with open('chrome_users.json', 'w') as f:
+        f.write(json.dumps(dump_users(path=chrome_dbs_path)))
+
+    if deep:
+        chrome_files = generate_all_files(path=chrome_dbs_path)
+        urls = generate_urls(path=chrome_dbs_path, files=chrome_files)
+    else:
+        chrome_db_files = ['History', 'Favicons', 'Cookies', 'Top Sites',
+                           'Visited Links', 'Web Data', 'Shortcuts', 'Last Session',
+                           'Last Tabs', 'Network Action Predictor', 'Current Tabs',
+                           'Preferences', 'Current Session', 'TransportSecurity',
+                           'TransportSecurity', 'Login Data', 'Origin Bound Certs',
+                           'Bookmarks', 'QuotaManager', 'Extension Cookies']
+        urls = generate_urls(path=chrome_dbs_path, files=chrome_db_files)
+
+    with open('chrome_urls.txt', 'w') as f:
+        for url in urls:
+            f.write("%s\n" % url)
+        print "*LOGGING*\tdump_data: {:5}%".format(100.0)
 
 
 def generate_all_files(path):
-    global ALL_FILES
+    chrome_files = set([])
     for root, dirs, files in os.walk(path):
-        ALL_FILES = ALL_FILES.union(files)
+        chrome_files = chrome_files.union(files)
+    return chrome_files
 
 
 def dump_user_pass(path):
@@ -80,28 +95,35 @@ def fuzzy_search(name1, name2, strictness):
 
 
 def kill_process():
+    process_names = ['chrome.exe', 'chrome']
     for p in process_iter():
-        for name in PROCESS_NAME:
-            if fuzzy_search(p.name(), name, 0.9):
+        for p_name in process_names:
+            if p == p_name:
                 p.kill()
 
 
 def get_os_path():
-    import platform
-    print platform.system(), type(platform.system())
-    operating_system = platform.system().upper()
-    if 'WINDOWS' in operating_system:
-        operating_system += platform.release().upper()
+    path_win_10_post2008 = os.path.join('C:\\', 'Users', os.getenv('username'), 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'System Profile')
+    path_win_7 = os.path.join('C:\\', 'Users', os.getenv('username'), 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default')
+    path_win_xp = os.path.join('C:\\', 'Documents and Settings', os.getenv('username'), 'Application Support', 'Google', 'Chrome', 'Default')
+    path_mac_os_x = '~/Library/Application Support/Google/Chrome/Default/'
+    path_linux = '~/.config/google-chrome/Default/'
+    system_name = platform.system().upper()
+    if 'JAVA' in system_name:
+        return None
+    if 'WINDOWS' in system_name:
+        system_name += platform.release().upper()
     return {
-        'WINDOWS10': PATH_WINDOWS_VISTA_AND_LATER,
-        'WINDOWS8.1': PATH_WINDOWS_VISTA_AND_LATER,
-        'WINDOWS8': PATH_WINDOWS_VISTA_AND_LATER,
-        'WINDOWS7': PATH_WINDOWS_VISTA_AND_LATER,
-        'WINDOWSVISTA': PATH_WINDOWS_VISTA_AND_LATER,
-        'WINDOWSXP': PATH_WINDOWS_XP,
-        'MAC': PATH_MAC_OS_X,
-        'LINUX': PATH_LINUX
-    }.get(operating_system, 'WINDOWS10')
+        'WINDOWSPOST2008SERVER': path_win_10_post2008,
+        'WINDOWS10': path_win_10_post2008,
+        'WINDOWS8.1': path_win_10_post2008,
+        'WINDOWS8': path_win_10_post2008,
+        'WINDOWS7': path_win_7,
+        'WINDOWSVISTA': path_win_7,
+        'WINDOWSXP': path_win_xp,
+        'MACOS': path_mac_os_x,
+        'LINUX': path_linux
+    }.get(system_name, 'WINDOWS10')
 
 
 def generate_urls(path, files):
@@ -133,39 +155,12 @@ def generate_urls(path, files):
     return urls
 
 
-def dump_data(kill_chrome, deep):
-    if kill_chrome:
-        kill_process()
-    path = get_os_path()
-
-    with open('chrome_downloads.json', 'w') as f:
-        f.write(json.dumps(dump_downloads(path=path)))
-    with open('chrome_user_pass.json', 'w') as f:
-        f.write(json.dumps(dump_user_pass(path=path)))
-    with open('chrome_users.json', 'w') as f:
-        f.write(json.dumps(dump_users(path=path)))
-
-    if deep:
-        generate_all_files(path=path)
-        urls = generate_urls(path=path, files=ALL_FILES)
-    else:
-        urls = generate_urls(path=path, files=DATA_FILES)
-
-    with open('chrome_urls.txt', 'w') as f:
-        for url in urls:
-            f.write("%s\n" % url)
-        print "*LOGGING*\tdump_data: {:5}%".format(100.0)
-
-
-def main(kill_chrome, deep):
-    dump_data(kill_chrome=int(kill_chrome), deep=int(deep))
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Dump information from google-chrome browser databases')
-    parser.add_argument('-k', '--kill', type=str, help='kill chrome process', required=False, default='0',
-                        dest='kill_chrome')
-    parser.add_argument('-d', '--deep', type=str, help='deep dump', required=False, default='0', dest='deep')
-    args = parser.parse_args()
+    parser.add_argument('-k', '--kill-browser', help='terminate chrome process', required=False,
+                        dest='terminate_chrome',
+                        action='store_true')
+    parser.add_argument('-d', '--deep', help='deep inspection', required=False, dest='deep',
+                        action='store_true')
 
-    main(**vars(args))
+    investigate_dbs(**vars(parser.parse_args()))
