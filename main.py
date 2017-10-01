@@ -157,7 +157,7 @@ def generate_urls(path, files):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Dump information from google-chrome browser databases')
+    parser = argparse.ArgumentParser(description='Dump information from Google-Chrome browser databases')
     parser.add_argument('-k', '--kill-browser', help='terminate chrome process', required=False,
                         dest='terminate_chrome',
                         action='store_true')
