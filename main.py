@@ -36,7 +36,7 @@ def investigate_dbs(terminate_chrome, deep):
 
     with open('chrome_urls.txt', 'w') as f:
         for url in urls:
-            f.write("%s\n" % url)
+            f.write('{}\n'.format(url))
         print "*LOGGING*\tdump_data: {:5}%".format(100.0)
 
 
