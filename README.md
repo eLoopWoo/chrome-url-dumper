@@ -40,12 +40,12 @@ pip list | grep "package"
 
 Windows
 ```
-python main.py -k {1/0} -d {1/0}
+python main.py -k -d
 ```
 
 Linux
 ```
-./main.py -k {1/0} -d {1/0}
+./main.py -k -d
 ```
 
 ## Authors
