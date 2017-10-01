@@ -3,7 +3,7 @@ import argparse
 import os
 from pandas import read_sql_query
 from re import findall
-from psutil import process_iter
+import psutil
 from difflib import SequenceMatcher
 import win32crypt
 import json
@@ -103,10 +103,15 @@ def fuzzy_search(name1, name2, strictness):
 
 def kill_process():
     process_names = ['chrome.exe', 'chrome']
-    for p in process_iter():
+    for p in psutil.process_iter():
         for p_name in process_names:
-            if p == p_name:
-                p.kill()
+            try:
+                if p.name() == p_name:
+                    p.kill()
+            except psutil.NoSuchProcess:
+                # unknown problem
+                print "no such process"
+                continue
 
 
 def get_os_path():
