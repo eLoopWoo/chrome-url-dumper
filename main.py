@@ -8,25 +8,17 @@ from difflib import SequenceMatcher
 import win32crypt
 import json
 import platform
+import time
 
 
 def investigate_dbs(terminate_chrome, deep):
+    current_time = time.strftime("%H:%M:%S_%d-%m-%Y")
     if terminate_chrome:
         kill_process()
     chrome_dbs_path = get_os_path()
-
-    with open('chrome_downloads.json', 'w') as f:
-        print "dump_downloads"
-        f.write(json.dumps(dump_downloads(path=chrome_dbs_path)))
-        f.flush()
-    with open('chrome_user_pass.json', 'w') as f:
-        print "dump_user_pass"
-        f.write(json.dumps(dump_user_pass(path=chrome_dbs_path)))
-        f.flush()
-    with open('chrome_users.json', 'w') as f:
-        print "dump_users"
-        f.write(json.dumps(dump_users(path=chrome_dbs_path)))
-        f.flush()
+    dump_downloads(path=chrome_dbs_path, output=os.path.join(current_time, 'chrome_downloads.json'))
+    dump_user_pass(path=chrome_dbs_path, output=os.path.join(current_time, 'chrome_user_pass.json'))
+    dump_users(path=chrome_dbs_path, output=os.path.join(current_time, 'chrome_users.json'))
 
     if deep:
         chrome_files = generate_all_files(path=chrome_dbs_path)
@@ -53,47 +45,49 @@ def generate_all_files(path):
     return chrome_files
 
 
-def dump_user_pass(path):
-    data = ([], [])
-    conn = sqlite3.connect(os.path.join(path, 'Login Data'))
-    cursor = conn.cursor()
-    cursor.execute(
-        'SELECT username_value, action_url, times_used, signon_realm, origin_url, password_element, password_value, date_created FROM logins')
-    for result in cursor.fetchall():
-        password = win32crypt.CryptUnprotectData(result[6], None, None, None, 0)[1]
-        if password:
-            result = list(result)
-            result.pop(6)
-            result.insert(6, password)
-            data[0].append(result)
-        else:
-            result = list(result)
-            result.pop(6)
-            data[1].append(result)
-    return data
+def dump_user_pass(path, output):
+    with open(output, 'w') as f:
+        data = ([], [])
+        conn = sqlite3.connect(os.path.join(path, 'Login Data'))
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT username_value, action_url, times_used, signon_realm, origin_url, password_element, password_value, date_created FROM logins')
+        for result in cursor.fetchall():
+            password = win32crypt.CryptUnprotectData(result[6], None, None, None, 0)[1]
+            if password:
+                result = list(result)
+                result.pop(6)
+                result.insert(6, password)
+                data[0].append(result)
+            else:
+                result = list(result)
+                result.pop(6)
+                data[1].append(result)
+        f.write(json.dumps(data))
+        f.flush()
 
 
-def dump_users(path):
-    data = []
-    conn = sqlite3.connect(os.path.join(path, 'Login Data'))
-    cursor = conn.cursor()
-    cursor.execute(
-        'SELECT username_value, update_time, origin_domain FROM stats')
-    for result in cursor.fetchall():
-        data.append(result)
-    return data
+def dump_users(path, output):
+    with open(output, 'w') as f:
+        conn = sqlite3.connect(os.path.join(path, 'Login Data'))
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT username_value, update_time, origin_domain FROM stats')
+        data = cursor.fetchall()
+        f.write(json.dumps(data))
+        f.flush()
 
 
-def dump_downloads(path):
-    data = []
-    db_path = os.path.join(path, 'History')
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-        'SELECT tab_url, http_method, opened, site_url, last_access_time, start_time, tab_referrer_url, last_modified, by_ext_name, original_mime_type, referrer, current_path, target_path, transient FROM downloads')
-    for result in cursor.fetchall():
-        data.append(result)
-    return data
+def dump_downloads(path, output):
+    with open(output, 'w') as f:
+        db_path = os.path.join(path, 'History')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT tab_url, http_method, opened, site_url, last_access_time, start_time, tab_referrer_url, last_modified, by_ext_name, original_mime_type, referrer, current_path, target_path, transient FROM downloads')
+        data = cursor.fetchall()
+        f.write(json.dumps(data))
+        f.flush()
 
 
 def fuzzy_search(name1, name2, strictness):
