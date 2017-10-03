@@ -1,6 +1,8 @@
 import sqlite3
 import argparse
 import os
+
+import errno
 from pandas import read_sql_query
 from re import findall
 import psutil
@@ -9,19 +11,42 @@ import win32crypt
 import json
 import platform
 import time
+import logging
+import sys
+
+log = logging.getLogger(__name__)
+out_hdlr = logging.StreamHandler(sys.stdout)
+out_hdlr.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+out_hdlr.setLevel(logging.INFO)
+log.addHandler(out_hdlr)
+log.setLevel(logging.INFO)
 
 
 def investigate_dbs(terminate_chrome, deep):
-    current_time = time.strftime("%H:%M:%S_%d-%m-%Y")
+    log.info('INVESTIGATE CHROME DBS')
+    current_time = time.strftime("%H-%M-%S_%d-%m-%Y")
+    if not os.path.exists(current_time):
+        try:
+            log.info('CREATING FOLDER: {}'.format(os.path.join(os.getcwd(), current_time)))
+            os.makedirs(current_time)
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise
     if terminate_chrome:
+        log.info('TERMINATE CHROME')
         kill_process()
-    chrome_dbs_path = get_os_path()
+    chrome_dbs_path = get_dbs_path()
+    log.info('DUMP DOWNLOADS')
     dump_downloads(path=chrome_dbs_path, output=os.path.join(current_time, 'chrome_downloads.json'))
+    log.info('DUMP USER PASS')
     dump_user_pass(path=chrome_dbs_path, output=os.path.join(current_time, 'chrome_user_pass.json'))
+    log.info('DUMP USERS')
     dump_users(path=chrome_dbs_path, output=os.path.join(current_time, 'chrome_users.json'))
 
     if deep:
+        log.info('GENERATE CHROME FILES')
         chrome_files = generate_all_files(path=chrome_dbs_path)
+        log.info('GENERATE URLS - DEEP')
         urls = generate_urls(path=chrome_dbs_path, files=chrome_files)
     else:
         chrome_db_files = ['History', 'Favicons', 'Cookies', 'Top Sites',
@@ -30,12 +55,11 @@ def investigate_dbs(terminate_chrome, deep):
                            'Preferences', 'Current Session', 'TransportSecurity',
                            'TransportSecurity', 'Login Data', 'Origin Bound Certs',
                            'Bookmarks', 'QuotaManager', 'Extension Cookies']
+        log.info('GENERATE URLS - NORMAL')
         urls = generate_urls(path=chrome_dbs_path, files=chrome_db_files)
 
-    with open('chrome_urls.txt', 'w') as f:
-        for url in urls:
-            f.write('{}\n'.format(url))
-        print "*LOGGING*\tdump_data: {:5}%".format(100.0)
+    log.info('DUMP URLS')
+    dump_urls(urls=urls, output=os.path.join(current_time, 'chrome_urls.json'))
 
 
 def generate_all_files(path):
@@ -90,6 +114,12 @@ def dump_downloads(path, output):
         f.flush()
 
 
+def dump_urls(urls, output):
+    with open(output, 'w') as f:
+        for url in urls:
+            f.write('{}\n'.format(url))
+
+
 def fuzzy_search(name1, name2, strictness):
     similarity = SequenceMatcher(None, name1, name2)
     return similarity.ratio() > strictness
@@ -104,11 +134,11 @@ def kill_process():
                     p.kill()
             except psutil.NoSuchProcess:
                 # unknown problem
-                print "no such process"
+                log.info("PSUUTIL.NOSUCHPROCESS")
                 continue
 
 
-def get_os_path():
+def get_dbs_path():
     path_win_10_post2008 = os.path.join('C:\\', 'Users', os.getenv('username'), 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default')
     path_win_7 = os.path.join('C:\\', 'Users', os.getenv('username'), 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default')
     path_win_xp = os.path.join('C:\\', 'Documents and Settings', os.getenv('username'), 'Application Support', 'Google', 'Chrome', 'Default')
@@ -139,8 +169,7 @@ def generate_urls(path, files):
         try:
             counter += 1
             if not (counter % (len(files) / 10)):
-                print "*LOGGING*\tgenerate_urls: {}%".format((float(counter) / len(files)) * 100)
-
+                log.info("GENERATE URLS: {}%".format((float(counter) / len(files)) * 100))
             db = sqlite3.connect(os.path.join(path, f))
             cursor = db.cursor()
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -148,16 +177,12 @@ def generate_urls(path, files):
             for table_name in tables:
                 table_name = table_name[0]
                 table = read_sql_query("SELECT * from %s" % table_name, db)
-                new_urls = findall(
-                    '[\d\w/.-:]+[\.][a-zA-Z][\d\w/.-]+[-/, ]',
-                    table.to_string())
+                new_urls = findall(r"(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\S]*)\/?", table.to_string())
                 urls = urls.union(new_urls)
-                # print 'File:{:15}Success'.format(f)
+                # log.info('File:{:15}Success'.format(f))
         except sqlite3.DatabaseError, e:
-            print '*LOGGING*\tgenerate_urls: {:30}File: {:30}Failed: {:30}'.format(
-                str((float(counter) / len(files)) * 100) + '%', f,
-                e)
-    print "*LOGGING*\tgenerate_urls: {}%".format(100.0)
+            log.info('GENERATE URLS: {:30}File: {:30}Failed: {:30}'.format(str((float(counter) / len(files)) * 100) + '%', f, e))
+            # log.info("GENERATE URLS: {}%".format(100.0))
     return urls
 
 
