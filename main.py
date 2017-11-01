@@ -194,4 +194,5 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--deep', help='deep inspection', required=False, dest='deep',
                         action='store_true')
 
+    
     investigate_dbs(**vars(parser.parse_args()))
