@@ -1,3 +1,3 @@
-pandas
-psutil
-pypiwin32
+pandas==0.19.2
+psutil==5.2.2
+pypiwin32==219
